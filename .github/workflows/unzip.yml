@@ -1,0 +1,45 @@
+name: Auto Unzip
+
+on:
+  push:
+    paths:
+      - "*.zip"
+
+permissions:
+  contents: write
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show repo files (debug)
+        run: ls -lah
+
+      - name: Unzip all zip files
+        run: |
+          mkdir -p extracted
+          unzip "*.zip" -d extracted || echo "No zip found"
+
+      - name: Show extracted structure
+        run: ls -R extracted || echo "No extracted files"
+
+      - name: Move extracted files to root
+        run: |
+          cp -r extracted/*/* . || echo "Nothing to copy"
+
+      - name: Clean up zip & extracted folder
+        run: |
+          rm -rf extracted
+          rm -f *.zip
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "action@github.com"
+          git add .
+          git commit -m "Auto unzip & update files" || echo "No changes"
+          git push
